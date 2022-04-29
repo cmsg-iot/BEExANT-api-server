@@ -9,6 +9,35 @@ module.exports = function (app) {
     );
     next();
   });
-  app.post("/api/file/tag", [authJwt.verifyToken], controller.createFileTag);
+
+  // Get all tags by user
+  app.get(
+    "/api/file/tag",
+    [authJwt.verifyToken, controller.checkUserExist],
+    controller.getFileTags
+  );
+
+  // Get file list by user and tag
+  app.get(
+    "/api/file/list",
+    [authJwt.verifyToken, controller.checkUserExist],
+    controller.getFileList
+  );
+
+  // Get file data by user and tag
+  app.get(
+    "/api/file",
+    [authJwt.verifyToken, controller.checkUserExist],
+    controller.getFile
+  );
+
+  // Create new tag by user
+  app.post(
+    "/api/file/tag",
+    [authJwt.verifyToken, controller.checkUserExist],
+    controller.createFileTag
+  );
+
+  // Create new file by user and tag
   app.post("/api/file", [authJwt.verifyToken], controller.createFile);
 };

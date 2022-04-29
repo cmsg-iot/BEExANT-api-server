@@ -8,6 +8,20 @@ const Op = db.Sequelize.Op;
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
+function LogHandler(log) {
+  let title = `/--------${log.title}--------/`;
+  let result = "";
+  for (const key in log) {
+    if (Object.hasOwnProperty.call(log, key)) {
+      if (key !== "title") {
+        const element = log[key];
+        result += `${key}: ${element}\n`;
+      }
+    }
+  }
+  console.log(`${title}\n\n${result}`);
+}
+
 exports.signup = (req, res) => {
   // Save User to Database
   User.create({
@@ -25,42 +39,43 @@ exports.signup = (req, res) => {
           },
         }).then((roles) => {
           user.setRoles(roles).then(() => {
-            console.log("/--------SignUp Success--------/");
-            console.log(
-              `User: ${req.body.username}\nHost: ${req.headers.host}\nAgent: ${
-                req.headers["user-agent"]
-              }\nTime: ${new Date(Date.now())}\nRole: ${
-                req.body.roles
-              }\nMessage: User was registered successfully!`
-            );
-            console.log("/-----------------------------/\n");
+            LogHandler({
+              title: "SignUp Success",
+              User: req.body.username,
+              Host: req.headers.host,
+              Agent: req.headers["user-agent"],
+              Time: new Date(Date.now()),
+              Role: req.body.roles,
+              message: "User was registered successfully!",
+            });
             res.send({ message: "User was registered successfully!" });
           });
         });
       } else {
         // user role = 1
         user.setRoles([1]).then(() => {
-          console.log("/--------SignUp Success--------/");
-          console.log(
-            `User: ${req.body.username}\nHost: ${req.headers.host}\nAgent: ${
-              req.headers["user-agent"]
-            }\nTime: ${new Date(
-              Date.now()
-            )}\nRole: user\nMessage: User was registered successfully!`
-          );
-          console.log("/-----------------------------/\n");
+          LogHandler({
+            title: "SignUp Success",
+            User: req.body.username,
+            Host: req.headers.host,
+            Agent: req.headers["user-agent"],
+            Time: new Date(Date.now()),
+            Role: "user",
+            message: "User was registered successfully!",
+          });
           res.send({ message: "User was registered successfully!" });
         });
       }
     })
     .catch((err) => {
-      console.log("/--------SignUp Failed--------/");
-      console.log(
-        `User: ${req.body.username}\nHost: ${req.headers.host}\nAgent: ${
-          req.headers["user-agent"]
-        }\nTime: ${new Date(Date.now())}\nMessage: ${err.message}`
-      );
-      console.log("/-----------------------------/\n");
+      LogHandler({
+        title: "SignUp Failed",
+        User: req.body.username,
+        Host: req.headers.host,
+        Agent: req.headers["user-agent"],
+        Time: new Date(Date.now()),
+        message: err.message,
+      });
       res.status(400).send({ message: err.message });
     });
 };
@@ -103,24 +118,28 @@ exports.signin = (req, res) => {
           httpOnly: true,
           sameSite: "lax",
         });
-        console.log("/--------Login Success--------/");
-        console.log(
-          `User: ${req.body.username}\nHost: ${req.headers.host}\nAgent: ${
-            req.headers["user-agent"]
-          }\nTime: ${new Date(Date.now())}\nMessage: login success!`
-        );
-        console.log("/-----------------------------/\n");
+
+        LogHandler({
+          title: "Login Success",
+          User: req.body.username,
+          Host: req.headers.host,
+          Agent: req.headers["user-agent"],
+          Time: new Date(Date.now()),
+          message: "Login Success!",
+        });
+
         res.status(200).send("login success");
       });
     })
     .catch((err) => {
-      console.log("/--------Login Failed--------/");
-      console.log(
-        `User: ${req.body.username}\nHost: ${req.headers.host}\nAgent: ${
-          req.headers["user-agent"]
-        }\nTime: ${new Date(Date.now())}\nMessage: ${err.message}`
-      );
-      console.log("/-----------------------------/\n");
+      LogHandler({
+        title: "Login Failed",
+        User: req.body.username,
+        Host: req.headers.host,
+        Agent: req.headers["user-agent"],
+        Time: new Date(Date.now()),
+        message: err.message,
+      });
       res.status(400).send({ message: err.message });
     });
 };
@@ -151,13 +170,13 @@ exports.logout = (req, res) => {
     httpOnly: true,
   });
 
-  console.log("/--------Logout Success--------/");
-  console.log(
-    `Host: ${req.headers.host}\nAgent: ${
-      req.headers["user-agent"]
-    }\nTime: ${new Date(Date.now())}\nMessage: logout success!`
-  );
-  console.log("/-----------------------------/\n");
+  LogHandler({
+    title: "Logout Success",
+    Host: req.headers.host,
+    Agent: req.headers["user-agent"],
+    Time: new Date(Date.now()),
+    message: "Logout Success!",
+  });
   res
     .status(200)
     .json({ success: true, message: "User logged out successfully" });

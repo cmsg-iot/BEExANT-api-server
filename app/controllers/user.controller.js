@@ -1,6 +1,43 @@
 const db = require("../models");
+const User = db.user;
 const File = db.file;
 const FileTag = db.fileTag;
+
+function LogHandler(log) {
+  let title = `/--------${log.title}--------/`;
+  let result = "";
+  for (const key in log) {
+    if (Object.hasOwnProperty.call(log, key)) {
+      if (key !== "title") {
+        const element = log[key];
+        result += `${key}: ${element}\n`;
+      }
+    }
+  }
+  console.log(`${title}\n\n${result}`);
+}
+
+exports.checkUserExist = (req, res, next) => {
+  User.findOne({
+    where: {
+      id: req.userId,
+    },
+  }).then((user) => {
+    if (!user) {
+      res.cookie("authcookie", "", {
+        expires: new Date(Date.now() + 3 * 1000),
+        httpOnly: true,
+      });
+      LogHandler({
+        title: "User Not Exist",
+        userId: req.userId,
+      });
+      res.status(400).send("User not exist.");
+      return;
+    }
+    next();
+  });
+};
 
 exports.createFileTag = (req, res) => {
   FileTag.findOne({
@@ -10,11 +47,12 @@ exports.createFileTag = (req, res) => {
     },
   }).then((result) => {
     if (result) {
-      console.log("/--------File Tag Create Failed--------/");
-      console.log(
-        `userId: ${req.userId}\ntag: ${req.body.tag}\nmessage: File tag was used.`
-      );
-      console.log("/------------------------------------/\n");
+      LogHandler({
+        title: "File Tag Create Failed",
+        userId: req.userId,
+        tag: req.body.tag,
+        message: "File tag was used.",
+      });
       res.status(400).send("File tag was used.");
       return;
     }
@@ -23,20 +61,23 @@ exports.createFileTag = (req, res) => {
       userId: req.userId,
     })
       .then((user) => {
-        console.log("/--------File Tag Create Success--------/");
-        console.log(
-          `userId: ${req.userId}\ntagId: ${user.dataValues.id}\ntag: ${req.body.tag}\ncreatedAt: ${user.dataValues.createdAt}`
-        );
-        console.log("/-------------------------------------/\n");
+        LogHandler({
+          title: "File Tag Create Success",
+          userId: req.userId,
+          tagId: user.dataValues.id,
+          tag: req.body.tag,
+          createdAt: user.dataValues.createdAt,
+        });
         res.status(200).send("File tag created successfully!");
       })
       .catch((error) => {
-        console.log("/--------File Tag Create Failed--------/");
-        console.log(
-          `userId: ${req.userId}\ntag: ${req.body.tag}\nmessage: ${error.errors[0].message}`
-        );
-        console.log("/------------------------------------/\n");
-        res.status(400).send({ message: error.errors[0].message });
+        LogHandler({
+          title: "File Tag Create Failed",
+          userId: req.userId,
+          tag: req.body.tag,
+          message: error,
+        });
+        res.status(400).send({ message: error });
       });
   });
 };
@@ -51,12 +92,15 @@ exports.createFile = (req, res) => {
   })
     .then((user) => {
       if (!user) {
-        console.log("/--------File Create Failed--------/");
-        console.log(
-          `userId: ${req.userId}\ntagId: ${req.body.tagId}\nfileName: ${req.body.fileName}\nfileSize: ${req.body.fileData.length}\nmessage: tag not found.`
-        );
-        console.log("/-------------------------------------/\n");
-        res.status(404).send({ message: "tag not found." });
+        LogHandler({
+          title: "File Create Failed",
+          userId: req.userId,
+          tagId: req.body.tagId,
+          fileName: req.body.fileName,
+          fileSize: req.body.fileData.length,
+          message: "Tag not found.",
+        });
+        res.status(404).send({ message: "Tag not found." });
         return;
       }
 
@@ -64,15 +108,19 @@ exports.createFile = (req, res) => {
       File.findOne({
         where: {
           userId: req.userId,
+          tagId: req.body.tagId,
           fileName: req.body.fileName,
         },
       }).then((result) => {
         if (result) {
-          console.log("/--------File Create Failed--------/");
-          console.log(
-            `userId: ${req.userId}\ntagId: ${req.body.tagId}\nfileName: ${req.body.fileName}\nfileSize: ${req.body.fileData.length}\nmessage: File Name was used.`
-          );
-          console.log("/-------------------------------------/\n");
+          LogHandler({
+            title: "File Create Failed",
+            userId: req.userId,
+            tagId: req.body.tagId,
+            fileName: req.body.fileName,
+            fileSize: req.body.fileData.length,
+            message: "File Name was used.",
+          });
           res.status(400).send("File Name was used.");
           return;
         }
@@ -85,33 +133,166 @@ exports.createFile = (req, res) => {
           fileData: req.body.fileData,
         })
           .then((user) => {
-            console.log("/--------File Create Success--------/");
-            console.log(
-              `userId: ${req.userId}\ntagId: ${req.body.tagId}\nfileName: ${req.body.fileName}\nfileSize: ${req.body.fileData.length}\ncreatedAt: ${user.dataValues.createdAt}`
-            );
-            console.log("/-------------------------------------/\n");
+            LogHandler({
+              title: "File Create Success",
+              userId: req.userId,
+              tagId: req.body.tagId,
+              fileName: req.body.fileName,
+              fileSize: req.body.fileData.length,
+              createdAt: user.dataValues.createdAt,
+            });
             res.status(200).send("File created successfully!");
           })
           .catch((err) => {
-            console.log("/--------File Create Failed--------/");
-            console.log(
-              `userId: ${req.userId}\ntagId: ${req.body.tagId}\nfileName: ${req.body.fileName}\nfileSize: ${req.body.fileData.length}\nmessage: ${err}`
-            );
-            console.log("/-------------------------------------/\n");
+            LogHandler({
+              title: "File Create Failed",
+              userId: req.userId,
+              tagId: req.body.tagId,
+              fileName: req.body.fileName,
+              fileSize: req.body.fileData.length,
+              message: err,
+            });
             res.status(400).send({ message: err.errors[0].message });
           });
       });
     })
     .catch((err) => {
-      console.log("/--------File Create Failed--------/");
-      console.log(
-        `userId: ${req.userId}\ntagId: ${req.body.tagId}\nfileName: ${req.body.fileName}\nfileSize: ${req.body.fileData.length}\nmessage: ${err}`
-      );
-      console.log("/-------------------------------------/\n");
+      LogHandler({
+        title: "File Create Failed",
+        userId: req.userId,
+        tagId: req.body.tagId,
+        fileName: req.body.fileName,
+        fileSize: req.body.fileData.length,
+        message: err,
+      });
       res.status(400).send({ message: err });
     });
 };
 
-exports.getFileTags = (req, res) => {};
+exports.getFileTags = (req, res) => {
+  FileTag.findAll({
+    where: {
+      userId: req.userId,
+    },
+    order: [["tag", "ASC"]],
+  })
+    .then((user) => {
+      if (user.length === 0) {
+        LogHandler({
+          title: "Get FileTags Failed",
+          userId: req.userId,
+          message: "Not found any tag, please create one.",
+        });
+        res.status(400).send("Not found any tag, please create one.");
+        return;
+      }
+      let tags = [];
+      user.map((v) => {
+        tags.push({ id: v.id, tag: v.tag });
+      });
 
-exports.getFileList = (req, res) => {};
+      LogHandler({
+        title: "Get FileTags Success",
+        userId: req.userId,
+        tagLen: tags.length,
+      });
+      res.status(200).send(tags);
+    })
+    .catch((err) => {
+      LogHandler({
+        title: "Get FileTags Failed",
+        userId: req.userId,
+        message: err,
+      });
+      res.status(400).send(err);
+    });
+};
+
+exports.getFileList = (req, res) => {
+  File.findAll({
+    where: {
+      userId: req.userId,
+      tagId: req.body.tagId,
+    },
+    order: [["createdAt", "ASC"]],
+  })
+    .then((user) => {
+      if (user.length === 0) {
+        LogHandler({
+          title: "Get FileList Failed",
+          userId: req.userId,
+          tagId: req.body.tagId,
+          message:
+            "Not found any file in this tag, please create new one, or check your tag.",
+        });
+        res
+          .status(400)
+          .send(
+            "Not found any file in this tag, please create new one, or check your tag."
+          );
+        return;
+      }
+      let files = [];
+      user.map((v) => {
+        files.push({
+          fileName: v.fileName,
+          createdAt: v.createdAt,
+        });
+      });
+      LogHandler({
+        title: "Get FileList Success",
+        userId: req.userId,
+        tagId: req.body.tagId,
+        listLen: files.length,
+      });
+      res.status(200).send(files);
+    })
+    .catch((err) => {
+      LogHandler({
+        title: "Get FileList Failed",
+        userId: req.userId,
+        message: err,
+      });
+      res.status(400).send(err);
+    });
+};
+
+exports.getFile = (req, res) => {
+  File.findOne({
+    where: {
+      userId: req.userId,
+      tagId: req.body.tagId,
+      fileName: req.body.fileName,
+    },
+  })
+    .then((file) => {
+      if (!file) {
+        LogHandler({
+          title: "Get File Failed",
+          userId: req.userId,
+          tagId: req.body.tagId,
+          fileName: req.body.fileName,
+          message: "File not found.",
+        });
+        res.status(400).send("File not found.");
+        return;
+      }
+      LogHandler({
+        title: "Get File Success",
+        userId: req.userId,
+        tagId: req.body.tagId,
+        fileName: req.body.fileName,
+      });
+      res.status(200).send(file.fileData);
+    })
+    .catch((err) => {
+      LogHandler({
+        title: "Get File Failed",
+        userId: req.userId,
+        tagId: req.body.tagId,
+        fileName: req.body.fileName,
+        message: err,
+      });
+      res.status(400).send(err);
+    });
+};

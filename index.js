@@ -6,7 +6,7 @@ const app = express();
 require("dotenv").config();
 
 var corsOptions = {
-  origin: "http://localhost:8081",
+  origin: process.env.CORS_ORIGIN,
   credentials: true,
 };
 
@@ -22,12 +22,9 @@ app.use(cookieParser());
 
 const db = require("./app/models");
 const Role = db.role;
-
-db.sequelize.sync();
-// db.sequelize.sync({ force: true }).then(() => {
-//   console.log("Drop and Resync Db");
-//   initial();
-// });
+const User = db.user;
+const File = db.file;
+const FileTag = db.fileTag;
 
 function initial() {
   Role.create({
@@ -43,6 +40,21 @@ function initial() {
     name: "admin",
   });
 }
+// db.sequelize.sync();
+
+// sync each model
+Role.sync({ force: true })
+  .then(() => {
+    console.log("sync role model.");
+    initial();
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+User.sync();
+File.sync();
+FileTag.sync();
 
 // routes
 require("./app/routes/auth.routes")(app);

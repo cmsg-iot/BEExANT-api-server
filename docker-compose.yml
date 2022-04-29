@@ -1,0 +1,36 @@
+version: "3.1"
+
+services:
+  pg:
+    image: postgres:12-alpine
+    restart: on-failure
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      -  ./data/postgresql/data:/var/lib/postgresql/data:Z
+    networks:
+      - container-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  server:
+    image: beexant-file-server
+    restart: on-failure
+    ports:
+      - 9527:9527
+    env_file:
+      - ./.env
+    networks:
+      - container-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+networks:
+    container-network:
