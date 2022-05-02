@@ -23,6 +23,12 @@ function LogHandler(log) {
 }
 
 exports.signup = (req, res) => {
+  if (!(req.body.username && req.body.email && req.body.password)) {
+    res
+      .status(400)
+      .send({ message: "UserName, Email, Password are required!" });
+    return;
+  }
   // Save User to Database
   User.create({
     username: req.body.username,
@@ -81,6 +87,10 @@ exports.signup = (req, res) => {
 };
 
 exports.signin = (req, res) => {
+  if (!req.body.username) {
+    res.status(400).send({ message: "UserName is required!" });
+    return;
+  }
   User.findOne({
     where: {
       username: req.body.username,
