@@ -22,9 +22,6 @@ app.use(cookieParser());
 
 const db = require("./app/models");
 const Role = db.role;
-const User = db.user;
-const File = db.file;
-const FileTag = db.fileTag;
 
 function initial() {
   Role.create({
@@ -40,9 +37,8 @@ function initial() {
     name: "admin",
   });
 }
-// db.sequelize.sync();
 
-// sync each model
+// force sync role model everytime
 Role.sync({ force: true })
   .then(() => {
     console.log("sync role model.");
@@ -52,9 +48,8 @@ Role.sync({ force: true })
     console.log(err);
   });
 
-User.sync();
-File.sync();
-FileTag.sync();
+// sync relations
+db.sequelize.sync();
 
 // routes
 require("./app/routes/auth.routes")(app);

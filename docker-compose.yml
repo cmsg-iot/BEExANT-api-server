@@ -18,7 +18,7 @@ services:
         max-file: "3"
 
   server:
-    image: beexant-file-server
+    image: dockerlife0601/beexant-file-server
     restart: on-failure
     ports:
       - 9527:9527
