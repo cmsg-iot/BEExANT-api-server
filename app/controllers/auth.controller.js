@@ -23,16 +23,13 @@ function LogHandler(log) {
 }
 
 exports.signup = (req, res) => {
-  if (!(req.body.username && req.body.email && req.body.password)) {
-    res
-      .status(400)
-      .send({ message: "UserName, Email, Password are required!" });
+  if (!(req.body.username && req.body.password)) {
+    res.status(400).send({ message: "UserName, Password are required!" });
     return;
   }
   // Save User to Database
   User.create({
     username: req.body.username,
-    email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 10),
   })
     .then((user) => {
