@@ -2,6 +2,7 @@ const db = require("../models");
 const config = require("../config/auth.config");
 const User = db.user;
 const Role = db.role;
+const FileTag = db.fileTag;
 
 const Op = db.Sequelize.Op;
 
@@ -33,6 +34,12 @@ exports.signup = (req, res) => {
     password: bcrypt.hashSync(req.body.password, 10),
   })
     .then((user) => {
+      FileTag.create({
+        tag: "temp",
+        userId: user.dataValues.id,
+      }).catch((err) => {
+        console.log(err);
+      });
       if (req.body.roles) {
         Role.findAll({
           where: {
