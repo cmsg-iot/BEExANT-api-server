@@ -10,6 +10,12 @@ module.exports = function (app) {
     next();
   });
 
+  // Verify if user login
+  app.get("/api/user", [authJwt.verifyToken], controller.isUserLogin);
+
+  // Get user info
+  app.get("/api/user/info", [authJwt.verifyToken], controller.getUserInfo);
+
   // Get all tags by user
   app.get(
     "/api/file/tag",
@@ -18,15 +24,15 @@ module.exports = function (app) {
   );
 
   // Get file list by user and tag
-  app.get(
+  app.post(
     "/api/file/list",
     [authJwt.verifyToken, controller.checkUserExist],
     controller.getFileList
   );
 
   // Get file data by user and tag
-  app.get(
-    "/api/file",
+  app.post(
+    "/api/file/data",
     [authJwt.verifyToken, controller.checkUserExist],
     controller.getFile
   );
@@ -40,4 +46,13 @@ module.exports = function (app) {
 
   // Create new file by user and tag
   app.post("/api/file", [authJwt.verifyToken], controller.createFile);
+
+  // Remove tag and uder files
+  app.delete("/api/tag", [authJwt.verifyToken], controller.removeTagFiles);
+
+  // Remove file by tag and fileName
+  app.delete("/api/file", [authJwt.verifyToken], controller.removeFile);
+
+  // Remove current user account
+  app.delete("/api/user", [authJwt.verifyToken], controller.removeUser);
 };
