@@ -224,7 +224,7 @@ exports.getFileTags = (req, res) => {
     where: {
       userId: req.userId,
     },
-    order: [["tag", "ASC"]],
+    order: [["createdAt", "ASC"]],
   })
     .then((user) => {
       let tags = [];
@@ -376,6 +376,46 @@ exports.removeTagFiles = (req, res) => {
     });
 };
 
+exports.removeFilesByTag = (req, res) => {
+  File.destroy({
+    where: {
+      userId: req.userId,
+      tagId: req.body.tagId,
+    },
+  })
+    .then((result) => {
+      if (!result) {
+        LogHandler(req, {
+          title: "Remove Files Failed",
+          userId: req.userId,
+          tagId: req.body.tagId,
+          fileName: req.body.fileName,
+          message: "Target Tag not found!",
+        });
+        res.status(400).send({ message: "Target Tag not found!" });
+        return;
+      }
+
+      LogHandler(req, {
+        title: "Remove Files Success",
+        userId: req.userId,
+        tagId: req.body.tagId,
+        fileNum: result,
+        message: "Removed files by tag!",
+      });
+      res.status(200).send({ message: "Removed files by tag!" });
+    })
+    .catch((err) => {
+      LogHandler(req, {
+        title: "Remove Files Failed",
+        userId: req.userId,
+        tagId: req.body.tagId,
+        message: err,
+      });
+      res.status(400).send({ message: err });
+    });
+};
+
 exports.removeFile = (req, res) => {
   File.destroy({
     where: {
@@ -406,7 +446,6 @@ exports.removeFile = (req, res) => {
         message: "Removed the file!",
       });
       res.status(200).send({ message: "Removed the file!" });
-      return;
     })
     .catch((err) => {
       LogHandler(req, {

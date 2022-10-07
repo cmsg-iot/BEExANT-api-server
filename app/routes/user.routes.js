@@ -50,6 +50,9 @@ module.exports = function (app) {
   // Remove tag and uder files
   app.delete("/api/tag", [authJwt.verifyToken], controller.removeTagFiles);
 
+  // Remove files by tag
+  app.delete("/api/files", [authJwt.verifyToken], controller.removeFilesByTag);
+
   // Remove file by tag and fileName
   app.delete("/api/file", [authJwt.verifyToken], controller.removeFile);
 
